@@ -1,4 +1,5 @@
 import requests
+import time
 from requests.exceptions import ConnectionError
 from proxypool.log.save_log import add_spider_log
 from proxypool.common.setting import *
@@ -12,12 +13,13 @@ base_headers = {
 
 def get_page(url, options={}):
     headers = dict(base_headers, **options)
-    add_spider_log('正在抓取%s'%str(url),LOG_INFO)
+    time.sleep(1)
+    add_spider_log('正在抓取%s' % str(url), LOG_INFO)
     try:
         response = requests.get(url, headers=headers)
-        add_spider_log('抓取%s成功,状态码：%d'%(url, response.status_code),LOG_INFO)
+        add_spider_log('抓取%s成功,状态码：%d' % (url, response.status_code), LOG_INFO)
         if response.status_code == 200:
             return response.text
     except ConnectionError:
-        add_spider_log('抓取失败%s'%url,LOG_ERROR)
+        add_spider_log('抓取失败%s' % url, LOG_ERROR)
         return None

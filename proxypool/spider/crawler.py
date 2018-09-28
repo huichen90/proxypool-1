@@ -23,7 +23,7 @@ class Crawler(object, metaclass=ProxyMetaclass):
     def get_proxies(self, callback):
         proxies = []
         for proxy in eval("self.{}()".format(callback)):
-            add_spider_log('成功获取到代理-%s'%proxy,LOG_INFO)
+            add_spider_log('成功获取到代理-%s' % proxy, LOG_INFO)
             proxies.append(proxy)
         return proxies
         
@@ -125,23 +125,26 @@ class Crawler(object, metaclass=ProxyMetaclass):
                     yield address_port.replace(' ','')
 
     def crawl_xicidaili(self):
-        for i in range(1, 3):
-            start_url = 'http://www.xicidaili.com/nn/{}'.format(i)
-            headers = {
-                'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-                'Cookie':'_free_proxy_session=BAh7B0kiD3Nlc3Npb25faWQGOgZFVEkiJWRjYzc5MmM1MTBiMDMzYTUzNTZjNzA4NjBhNWRjZjliBjsAVEkiEF9jc3JmX3Rva2VuBjsARkkiMUp6S2tXT3g5a0FCT01ndzlmWWZqRVJNek1WanRuUDBCbTJUN21GMTBKd3M9BjsARg%3D%3D--2a69429cb2115c6a0cc9a86e0ebe2800c0d471b3',
-                'Host':'www.xicidaili.com',
-                'Referer':'http://www.xicidaili.com/nn/3',
-                'Upgrade-Insecure-Requests':'1',
-            }
-            html = get_page(start_url, options=headers)
-            selector = etree.HTML(html)
-            ip_list = selector.xpath('//table[@id="ip_list"]//tr')
-            for ips in ip_list[1:]:
-                ip = ips.xpath('./td[2]/text()')[0]
-                port = ips.xpath('./td[3]/text()')[0]
-                address_port = ip + ':' + port
-                yield address_port.replace(' ', '')
+        try:
+            for i in range(1, 3):
+                start_url = 'http://www.xicidaili.com/nn/{}'.format(i)
+                headers = {
+                    'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+                    'Cookie':'_free_proxy_session=BAh7B0kiD3Nlc3Npb25faWQGOgZFVEkiJWRjYzc5MmM1MTBiMDMzYTUzNTZjNzA4NjBhNWRjZjliBjsAVEkiEF9jc3JmX3Rva2VuBjsARkkiMUp6S2tXT3g5a0FCT01ndzlmWWZqRVJNek1WanRuUDBCbTJUN21GMTBKd3M9BjsARg%3D%3D--2a69429cb2115c6a0cc9a86e0ebe2800c0d471b3',
+                    'Host':'www.xicidaili.com',
+                    'Referer':'http://www.xicidaili.com/nn/3',
+                    'Upgrade-Insecure-Requests':'1',
+                }
+                html = get_page(start_url, options=headers)
+                selector = etree.HTML(html)
+                ip_list = selector.xpath('//table[@id="ip_list"]//tr')
+                for ips in ip_list[1:]:
+                    ip = ips.xpath('./td[2]/text()')[0]
+                    port = ips.xpath('./td[3]/text()')[0]
+                    address_port = ip + ':' + port
+                    yield address_port.replace(' ', '')
+        except Exception as e:
+            pass
     
     def crawl_ip3366(self):
         for i in range(1, 5):
