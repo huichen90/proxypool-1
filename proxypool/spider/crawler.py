@@ -138,8 +138,8 @@ class Crawler(object, metaclass=ProxyMetaclass):
             selector = etree.HTML(html)
             ip_list = selector.xpath('//table[@id="ip_list"]//tr')
             for ips in ip_list[1:]:
-                ip = ips.xpath('./td[2]/text()').extract_first()
-                port = ips.xpath('./td[3]/text()').extract_first()
+                ip = ips.xpath('./td[2]/text()')[0]
+                port = ips.xpath('./td[3]/text()')[0]
                 address_port = ip + ':' + port
                 yield address_port.replace(' ', '')
     
@@ -151,8 +151,8 @@ class Crawler(object, metaclass=ProxyMetaclass):
                 selector = etree.HTML(html)
                 ip_list = selector.xpath('//tbody/tr')
                 for ips in ip_list[1:]:
-                    ip = ips.xpath('./td[1]/text()').extract_first()
-                    port = ips.xpath('./td[2]/text()').extract_first()
+                    ip = ips.xpath('./td[1]/text()')[0]
+                    port = ips.xpath('./td[2]/text()')[0]
                     address_port = ip + ':' + port
                     yield address_port.replace(' ', '')
     
@@ -161,12 +161,12 @@ class Crawler(object, metaclass=ProxyMetaclass):
         html = get_page(start_url)
         if html:
             selector = etree.HTML(html)
-            ip_list = selector.xpath('//tbody/tr')
+            ip_list = selector.xpath('//tr')
             for ips in ip_list[1:]:
-                ip = ips.xpath('./td[1]/text()').extract_first()
-                port = ips.xpath('./td[2]/text()').extract_first()
+                ip = ips.xpath('./td[1]/text()')[0]
+                port = ips.xpath('./td[2]/text()')[0]
                 address_port = ip + ':' + port
-                yield address_port.replace(' ', '')
+                yield address_port.replace(' ', '').replace('\r\n', '')
 
     def crawl_89ip(self):
         for i in range(1, 5):
@@ -176,10 +176,10 @@ class Crawler(object, metaclass=ProxyMetaclass):
                 selector = etree.HTML(html)
                 ip_list = selector.xpath('//tbody/tr')
                 for ips in ip_list:
-                    ip = ips.xpath('./td[1]/text()').extract_first()
-                    port = ips.xpath('./td[2]/text()').extract_first()
+                    ip = ips.xpath('./td[1]/text()')[0]
+                    port = ips.xpath('./td[2]/text()')[0]
                     address_port = ip + ':' + port
-                    yield address_port.replace(' ', '')
+                    yield address_port.replace(' ', '').replace('\n', '').replace('\t', '')
 
     def crawl_data5u(self):
         start_url = 'http://www.data5u.com/free/gngn/index.shtml'
@@ -200,10 +200,9 @@ class Crawler(object, metaclass=ProxyMetaclass):
             selector = etree.HTML(html)
             ip_list = selector.xpath('//div[@class="wlist"]//ul[@class="l2"]')
             for ips in ip_list:
-                ip = ips.xpath('./span[1]/li/text()').extract_first()
-                port = ips.xpath('./span[1]/li/text()').extract_first()
+                ip = ips.xpath('./span[1]/li/text()')[0]
+                port = ips.xpath('./span[2]/li/text()')[0]
                 address_port = ip + ':' + port
                 yield address_port.replace(' ', '')
 
 
-            
