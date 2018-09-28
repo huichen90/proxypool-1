@@ -1,8 +1,11 @@
+import json
 import re
+from lxml import etree
 from proxypool.spider.utils import get_page
 from pyquery import PyQuery as pq
 from proxypool.log.save_log import add_spider_log
 from proxypool.common.setting import *
+
 
 class ProxyMetaclass(type):
     def __new__(cls, name, bases, attrs):
@@ -54,13 +57,12 @@ class Crawler(object, metaclass=ProxyMetaclass):
     def crawl_ip181(self):
         start_url = 'http://www.ip181.com/'
         html = get_page(start_url)
-        ip_address = re.compile('<tr.*?>\s*<td>(.*?)</td>\s*<td>(.*?)</td>')
-        # \s* 匹配空格，起到换行作用
-        re_ip_address = ip_address.findall(html)
-        for address,port in re_ip_address:
-            result = address + ':' + port
-            yield result.replace(' ', '')
+        # ip_address = re.compile('<tr.*?>\s*<td>(.*?)</td>\s*<td>(.*?)</td>')
+        ip_list = json.loads(html)['RESULT']
 
+        for ip in ip_list:
+            result = ip.get('ip') + ':' + ip.get('port')
+            yield result.replace(' ', '')
 
     def crawl_ip3366(self):
         for page in range(1, 4):
@@ -133,57 +135,51 @@ class Crawler(object, metaclass=ProxyMetaclass):
                 'Upgrade-Insecure-Requests':'1',
             }
             html = get_page(start_url, options=headers)
-            if html:
-                find_trs = re.compile('<tr class.*?>(.*?)</tr>', re.S)
-                trs = find_trs.findall(html)
-                for tr in trs:
-                    find_ip = re.compile('<td>(\d+\.\d+\.\d+\.\d+)</td>') 
-                    re_ip_address = find_ip.findall(tr)
-                    find_port = re.compile('<td>(\d+)</td>')
-                    re_port = find_port.findall(tr)
-                    for address,port in zip(re_ip_address, re_port):
-                        address_port = address+':'+port
-                        yield address_port.replace(' ','')
+            selector = etree.HTML(html)
+            ip_list = selector.xpath('//table[@id="ip_list"]//tr')
+            for ips in ip_list[1:]:
+                ip = ips.xpath('./td[2]/text()').extract_first()
+                port = ips.xpath('./td[3]/text()').extract_first()
+                address_port = ip + ':' + port
+                yield address_port.replace(' ', '')
     
     def crawl_ip3366(self):
         for i in range(1, 5):
             start_url = 'http://www.ip3366.net/?stype=1&page={}'.format(i)
             html = get_page(start_url)
             if html:
-                find_tr = re.compile('<tr>(.*?)</tr>', re.S)
-                trs = find_tr.findall(html)
-                for s in range(1, len(trs)):
-                    find_ip = re.compile('<td>(\d+\.\d+\.\d+\.\d+)</td>')
-                    re_ip_address = find_ip.findall(trs[s])
-                    find_port = re.compile('<td>(\d+)</td>')
-                    re_port = find_port.findall(trs[s])
-                    for address,port in zip(re_ip_address, re_port):
-                        address_port = address+':'+port
-                        yield address_port.replace(' ','')
+                selector = etree.HTML(html)
+                ip_list = selector.xpath('//tbody/tr')
+                for ips in ip_list[1:]:
+                    ip = ips.xpath('./td[1]/text()').extract_first()
+                    port = ips.xpath('./td[2]/text()').extract_first()
+                    address_port = ip + ':' + port
+                    yield address_port.replace(' ', '')
     
     def crawl_iphai(self):
         start_url = 'http://www.iphai.com/'
         html = get_page(start_url)
         if html:
-            find_tr = re.compile('<tr>(.*?)</tr>', re.S)
-            trs = find_tr.findall(html)
-            for s in range(1, len(trs)):
-                find_ip = re.compile('<td>\s+(\d+\.\d+\.\d+\.\d+)\s+</td>', re.S)
-                re_ip_address = find_ip.findall(trs[s])
-                find_port = re.compile('<td>\s+(\d+)\s+</td>', re.S)
-                re_port = find_port.findall(trs[s])
-                for address,port in zip(re_ip_address, re_port):
-                    address_port = address+':'+port
-                    yield address_port.replace(' ','')
+            selector = etree.HTML(html)
+            ip_list = selector.xpath('//tbody/tr')
+            for ips in ip_list[1:]:
+                ip = ips.xpath('./td[1]/text()').extract_first()
+                port = ips.xpath('./td[2]/text()').extract_first()
+                address_port = ip + ':' + port
+                yield address_port.replace(' ', '')
 
     def crawl_89ip(self):
-        start_url = 'http://www.89ip.cn/apijk/?&tqsl=1000&sxa=&sxb=&tta=&ports=&ktip=&cf=1'
-        html = get_page(start_url)
-        if html:
-            find_ips = re.compile('(\d+\.\d+\.\d+\.\d+:\d+)', re.S)
-            ip_ports = find_ips.findall(html)
-            for address_port in ip_ports:
-                yield address_port
+        for i in range(1, 5):
+            start_url = 'http://www.89ip.cn/index_{}.html'.format(i)
+            html = get_page(start_url)
+            if html:
+                selector = etree.HTML(html)
+                ip_list = selector.xpath('//tbody/tr')
+                for ips in ip_list:
+                    ip = ips.xpath('./td[1]/text()').extract_first()
+                    port = ips.xpath('./td[2]/text()').extract_first()
+                    address_port = ip + ':' + port
+                    yield address_port.replace(' ', '')
 
     def crawl_data5u(self):
         start_url = 'http://www.data5u.com/free/gngn/index.shtml'
@@ -201,11 +197,13 @@ class Crawler(object, metaclass=ProxyMetaclass):
         }
         html = get_page(start_url, options=headers)
         if html:
-            ip_address = re.compile('<span><li>(\d+\.\d+\.\d+\.\d+)</li>.*?<li class=\"port.*?>(\d+)</li>', re.S)
-            re_ip_address = ip_address.findall(html)
-            for address, port in re_ip_address:
-                result = address + ':' + port
-                yield result.replace(' ', '')
+            selector = etree.HTML(html)
+            ip_list = selector.xpath('//div[@class="wlist"]//ul[@class="l2"]')
+            for ips in ip_list:
+                ip = ips.xpath('./span[1]/li/text()').extract_first()
+                port = ips.xpath('./span[1]/li/text()').extract_first()
+                address_port = ip + ':' + port
+                yield address_port.replace(' ', '')
 
 
             
